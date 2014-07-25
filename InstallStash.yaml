@@ -1,0 +1,6 @@
+---
+ - name: Install Stash
+   hosts: all
+   sudo: yes
+   roles:
+     - stash

@@ -1,0 +1,80 @@
+#!/usr/bin/expect -f
+#
+
+set force_conservative 0  ;# set to 1 to force conservative mode even if
+			  ;# script wasn't run conservatively originally
+if {$force_conservative} {
+	set send_slow {1 .1}
+	proc send {ignore arg} {
+		sleep .1
+		exp_send -s -- $arg
+	}
+}
+
+set timeout -1
+spawn $env(SHELL)
+send -- "sudo /tmp/stash.bin\r"
+expect -exact "\r
+Unpacking JRE ...\r
+Starting Installer ...\r
+\[?7h\r
+This will install Stash 3.1.3 on your computer.\r
+OK \[o, Enter\], Cancel \[c\]\r
+"
+send -- "o\r"
+expect -exact "o\r
+Where should Stash be installed?\r
+\r
+\[/opt/atlassian/stash/3.1.3\]\r
+"
+send -- "\r"
+expect -exact "\r
+Default location for Stash home directory\r
+\r
+\r
+\[/var/atlassian/application-data/stash\]\r
+"
+send -- "\r"
+expect -exact "\r
+Configure which ports Stash will use.\r
+\r
+\r
+Stash requires two TCP ports that are not being used by any other\r
+applications.\r
+\r
+The HTTP port is where users will access Stash through their browsers. The\r
+Control port is used to start and stop Stash.\r
+HTTP Port Number\r
+\[7990\]\r
+"
+send -- "\r"
+expect -exact "\r
+Control Port Number\r
+\[8006\]\r
+"
+send -- "\r"
+expect -exact "\r
+\r
+\r
+You may choose to run Stash as a service, which means it will start\r
+automatically whenever the computer restarts.\r
+Install Stash as Service?\r
+Yes \[y, Enter\], No \[n\]\r
+"
+send -- "y\r"
+expect -exact "y\r
+Please review your Stash installation settings\r
+\r
+\r
+Installation Directory: /opt/atlassian/stash/3.1.3 \r
+Home Directory: /var/atlassian/application-data/stash \r
+HTTP Port: 7990 \r
+Control Port: 8006 \r
+Install as service: Yes \r
+\r
+Install \[i, Enter\], Exit \[e\]\r
+"
+send -- "\r"
+expect -exact "# "
+send -- "exit\r"
+expect -exact "$ "

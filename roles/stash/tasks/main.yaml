@@ -1,0 +1,22 @@
+---
+ - name: Installing Debian Git
+   apt: pkg=git state=latest
+   when: ansible_os_family == "Debian"
+
+ - name: Installing RHEL Git
+   yum: pkg=git state=latest
+   when: ansible_os_family == "RedHat"
+
+ - name: Install expect
+   yum: pkg=expect state=latest
+   when: ansible_os_family == "RedHat"
+
+ - name: Install expect
+   apt: pkg=expect state=latest
+   when: ansible_os_family == "Debian"
+
+ - name: Download Stash installer into /tmp
+   get_url: url="http://www.atlassian.com/software/stash/downloads/binary/atlassian-stash-3.1.3-x64.bin" dest=/tmp/stash.bin mode=0775
+
+ - name: Run Stash Installer script via expect
+   script: script.exp
