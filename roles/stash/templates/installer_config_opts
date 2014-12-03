@@ -1,0 +1,15 @@
+// Should Stash be installed as a Service? Must be ADMIN (default: true if the process is running with administrator rights, false otherwise). If false, the home and installation directories must be specified to point to directories owned by the user
+app.install.service$Boolean=true
+ 
+// The ports Stash should bind to (defaults: portChoice=default, httpPort=7990, serverPort=8006)
+portChoice=custom
+httpPort=7990
+serverPort=8006
+ 
+ 
+// Path to the Stash HOME directory (default: /var/atlassian/application-data/stash if the process is running with administrator rights, ~/atlassian/application-data/stash otherwise)
+app.stashHome=/var/atlassian/application-data/stash
+ 
+ 
+// The target installation directory (default: /opt/atlassian/stash/<VERSION> if the process is running with administrator rights, ~/atlassian/stash/<VERSION> otherwise)
+sys.installationDir=/opt/atlassian/stash/3.5.0

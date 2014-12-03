@@ -16,7 +16,10 @@
    when: ansible_os_family == "Debian"
 
  - name: Download Stash installer into /tmp
-   get_url: url="http://www.atlassian.com/software/stash/downloads/binary/atlassian-stash-3.1.3-x64.bin" dest=/tmp/stash.bin mode=0775
+   get_url: url="http://www.atlassian.com/software/stash/downloads/binary/atlassian-stash-3.5.0-x64.bin" dest=/tmp/stash.bin mode=0775
 
- - name: Run Stash Installer script via expect
-   script: script.exp
+ - name: Copying the response file
+   template: src=installer_config_opts dest=/tmp/
+
+ - name: Installing Atlassian Stash
+   shell: /tmp/stash.bin -q -varfile /tmp/installer_config_opts
