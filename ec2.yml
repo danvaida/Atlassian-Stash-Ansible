@@ -1,0 +1,78 @@
+---
+- name: VPC, SG, EC2, RDS 
+  hosts: localhost
+  connection: local
+  gather_facts: False
+  tasks:
+    
+  - name: spinning up the Stash instance
+    local_action:
+      module: ec2 
+      count: 1
+      region: "{{ region }}"
+      zone: "{{ az_zone }}"
+      instance_type: c3.large
+      image: ami-b43503a9
+      state: present
+      group_id:
+        - "{{ office_ssh_sg_creation.group_id }}"
+        - "{{ public_http_sg_creation.group_id }}"
+        - "{{ stash_public_sg_creation.group_id }}"
+      vpc_subnet_id: "{{ vpc.subnets[1].id }}"
+      key_name: "{{ keypair }}"
+      monitoring: yes
+      assign_public_ip: yes
+      placement_group: magento
+      wait: yes
+      wait_timeout: 300
+      volumes:
+      - device_name: /dev/xvda
+        volume_size: 50
+        device_type: gp2
+      - device_name: /dev/xvdb
+        volume_size: 16
+        device_type: gp2
+        ephemeral: ephemeral0
+      - device_name: /dev/xvdc
+        volume_size: 16
+        device_type: gp2
+        ephemeral: ephemeral1
+    register: stash_ec2
+    tags: ec2
+
+
+  - name: adding EIP to the instance
+    local_action: ec2_eip in_vpc=yes instance_id={{ item }} region={{ region }}
+    with_items: stash_ec2.instance_ids
+    register: eip
+
+
+  - name: adding instance to host group
+    local_action: add_host name={{ item.public_ip }} groups=stash_ec2 ansible_ssh_user=ec2-user
+                  ansible_ssh_private_key_file=~/Downloads/firstfrankfurt.pem zone="{{ zone }}"
+    with_items: eip.results
+    register: host_group
+
+
+  - name: creating/updating DNS record
+    local_action: route53 command=create zone="{{ zone }}" record=stash."{{ zone }}" type=A value={{ item.public_ip }} overwrite=yes ttl=300
+    with_items: eip.results
+    register: route53
+  
+
+  - name: tagging instance
+    local_action: ec2_tag resource={{ item }} region={{ region }} state=present
+    with_items: stash_ec2.instance_ids
+    args:
+      tags:
+        Name: srv99
+
+  - name: adding instance to local host group
+    local_action: lineinfile dest=hosts regexp="pem" insertafter="[stash]" line="{{ item.public_ip }} ansible_ssh_user=ec2-user ansible_ssh_private_key_file=~/Downloads/firstfrankfurt.pem"
+    with_items: eip.results
+
+  - name: waiting for the instances to start
+    local_action: wait_for state=started host={{ item.public_ip }} port=22
+    with_items: eip.results
+
+- include: stash.yml 

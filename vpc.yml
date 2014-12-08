@@ -1,0 +1,40 @@
+---
+- name: VPC, SG, EC, RDS
+  hosts: localhost
+  connection: local
+  gather_facts: False
+  tasks:
+
+  - name: creating the VPC
+    local_action:
+      module: ec2_vpc
+      cidr_block: 10.0.0.0/16
+      dns_hostnames: yes
+      dns_support: yes
+      instance_tenancy: default
+      internet_gateway: yes
+      region: "{{ region }}"
+      resource_tags: { "Environment": "test" }
+      route_tables:
+        - subnets:
+            - 10.0.0.0/24
+          routes:
+            - dest: 0.0.0.0/0
+              gw: igw
+        - subnets:
+            - 10.0.1.0/24
+          routes:
+            - dest: 0.0.0.0/0
+              gw: igw
+      state: present
+      subnets:
+        - cidr: 10.0.0.0/24
+          az: "{{ az_zone }}"
+          resource_tags: { "Environment":"Production", "Name" : "Primary subnet" }
+        - cidr: 10.0.1.0/24
+          az: "{{ az_zone1b }}"
+          resource_tags: { "Environment":"Production", "Name" : "Secondary subnet" }
+      wait: yes
+    register: vpc
+
+- include: secgroup.yml

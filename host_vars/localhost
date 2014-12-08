@@ -1,0 +1,8 @@
+keypair: firstfrankfurt
+aio_sg: allinone
+region: eu-central-1
+az_zone: eu-central-1a
+az_zone1b: eu-central-1b
+
+db_instance_name: cool_stash_db
+your_public_ip: xxx.xxx.xxx.xxx

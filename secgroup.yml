@@ -1,0 +1,97 @@
+---
+- name: VPC, SG, EC2, RDS
+  hosts: localhost
+  connection: local
+  gather_facts: False
+  tasks:
+
+  - name: creating the Postgres RDS security group
+    local_action:
+      module: ec2_group
+      name: postgres_rds
+      description: group allowing private subnet traffic to the Postgres instance(s)
+      vpc_id: "{{ vpc.vpc_id }}"
+      region: "{{ region }}"
+      rules:
+        # Postgres from private subnet
+        - proto: tcp
+          from_port: 5432 
+          to_port: 5432
+          cidr_ip: 10.0.0.0/24 
+    register: private_postgres_sg_creation
+  
+
+  - name: creating the office-ssh security group
+    local_action:
+      module: ec2_group
+      name: office-ssh 
+      description: group allowing inbound SSH conns from your IP
+      vpc_id: "{{ vpc.vpc_id }}"
+      region: "{{ region }}"
+      rules:
+        # SSH from Office
+        - proto: tcp
+          from_port: 22
+          to_port: 22
+          cidr_ip: "{{ your_public_ip }}/32"
+      rules_egress: 
+        - proto: all
+          from_port: 0
+          to_port: 65535
+          cidr_ip: 0.0.0.0/0
+    register: office_ssh_sg_creation
+
+  - name: creating the HTTP(s) security group
+    local_action:
+      module: ec2_group
+      name: public_http 
+      description: group opening http and https traffic to the public
+      vpc_id: "{{ vpc.vpc_id }}"
+      region: "{{ region }}"
+      rules:
+        # HTTP(s)
+        - proto: tcp
+          from_port: 80
+          to_port: 80
+          cidr_ip: 0.0.0.0/0
+        - proto: tcp
+          from_port: 443
+          to_port: 443
+          cidr_ip: 0.0.0.0/0
+      rules_egress: 
+        - proto: all
+          from_port: 0
+          to_port: 65535
+          cidr_ip: 0.0.0.0/0
+    register: public_http_sg_creation
+
+  - name: creating the Stash security group
+    local_action:
+      module: ec2_group
+      name: stash
+      description: group opening Stash traffic to the public
+      vpc_id: "{{ vpc.vpc_id }}"
+      region: "{{ region }}"
+      rules:
+        # Stash
+        - proto: tcp
+          from_port: 7990 
+          to_port: 7990
+          cidr_ip: 0.0.0.0/0
+        - proto: tcp
+          from_port: 7999 
+          to_port: 7999
+          cidr_ip: 0.0.0.0/0
+        - proto: tcp
+          from_port: 8006
+          to_port: 8006
+          cidr_ip: 0.0.0.0/0
+      rules_egress: 
+        - proto: all
+          from_port: 0
+          to_port: 65535
+          cidr_ip: 0.0.0.0/0
+    register: stash_public_sg_creation
+
+- include: ec2.yml
+- include: rds.yml

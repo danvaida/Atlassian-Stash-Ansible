@@ -1,0 +1,7 @@
+---
+#http://docs.aws.amazon.com/ses/latest/DeveloperGuide/postfix.html
+#AWS SES settings need to be made for these settings to work
+#TXT and MX DNS records have to be created as well
+#Production access has to be required from AWS (takes ~ 1 day)
+
+- include: rh.yml

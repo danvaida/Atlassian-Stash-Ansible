@@ -1,0 +1,11 @@
+---
+
+- name: installing nginx
+  yum: name=nginx state=latest update_cache=yes
+
+- name: starting & enabling nginx
+  service: name=nginx state=started enabled=yes
+  
+- name: setting up the proxying from nginx to stash
+  template: src=stash_proxy.conf.j2 dest=/etc/nginx/conf.d/virtual.conf mode=0755
+  notify: reload nginx

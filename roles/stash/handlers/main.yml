@@ -1,0 +1,4 @@
+---
+
+- name: restart stash
+  service: name=atlstash state=restarted

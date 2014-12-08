@@ -1,0 +1,42 @@
+---
+- hosts: localhost
+  connection: local
+  gather_facts: False
+  tasks:
+  
+    - name: creating the Stash RDS subnet group
+      local_action:
+        module: rds_subnet_group
+        name: stash 
+        description: group holding the stash database
+        region: "{{ region }}"
+        subnets: 
+          - "{{ vpc.subnets[0].id }}"
+          - "{{ vpc.subnets[1].id }}"
+        state: present
+      register: stash_rds_sg_creation
+    
+    - name: adding the Stash RDS instance
+      local_action:
+        module: rds
+        backup_retention: 14
+        backup_window: 03:00-04:00
+        command: create
+        db_engine: postgres
+        db_name: stash 
+        engine_version: 9.3.5
+        port: 5432
+        instance_name: "{{ db_instance_name }}"
+        instance_type: db.t2.small
+        maint_window: Sat:02:00-Sat:03:00
+        size: 5
+        subnet: stash 
+        vpc_security_groups: "{{ private_postgres_sg_creation.group_id }}"
+        username: stashitlikeitshotbaby
+        password: "{{ db_master_password }}"
+        region: "{{ region }}" 
+        wait: yes
+        wait_timeout: 1800
+      register: rds_instance
+
+    - debug: msg="Open the browser and go to http://stash.{{ zone }} to configure Stash. The Postgres DB endpoint is {{ rds_instance.instance.endpoint }}. The DB name is stash, the user is stashitlikeitshotbaby and the password you can get with Ansible Vault"

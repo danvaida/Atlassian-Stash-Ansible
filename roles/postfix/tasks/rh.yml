@@ -1,0 +1,27 @@
+---
+#http://docs.aws.amazon.com/ses/latest/DeveloperGuide/postfix.html
+#AWS SES settings need to be made for these settings to work
+#TXT and MX DNS records have to be created as well
+#Production access has to be required from AWS (takes ~ 1 day)
+
+- name: removing exim
+  yum: name=exim4 state=absent
+
+- name: installing postfix
+  yum: name=postfix state=latest update_cache=yes
+
+- name: setting up the main.cf postfix file
+  template: src=main.cf.j2 dest=/etc/postfix/main.cf mode=0644
+
+- name: setting the sasl_passwd
+  template: src=sasl_passwd.j2 dest=/etc/postfix/sasl_passwd mode=0600 owner=root group=root
+
+- name: postmapping the sasl_passwd
+  shell: postmap hash:/etc/postfix/sasl_passwd && chmod 0600 /etc/postfix/sasl_passwd.db
+  notify: postfix restart
+
+- name: updating the mailname
+  lineinfile: dest=/etc/mailname regexp="stash" line="stash.{{ zone }}" state=present create=yes
+
+- name: updating the hostname
+  hostname: name=stash.{{ zone }} 

@@ -1,0 +1,8 @@
+---
+- name: Install Stash
+  hosts: stash_ec2:stash
+  sudo: yes
+  roles:
+    - nginx
+    - postfix
+    - stash

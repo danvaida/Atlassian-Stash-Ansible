@@ -1,25 +1,27 @@
 ---
- - name: Installing Debian Git
-   apt: pkg=git state=latest update_cache=yes cache_valid_time=86400
-   when: ansible_os_family == "Debian"
+- name: checking if Stash is already installed and running
+  service: name=atlstash state=started
+  register: service
+  ignore_errors: yes
 
- - name: Installing RHEL Git
-   yum: pkg=git state=latest
-   when: ansible_os_family == "RedHat"
+- name: Installing Git
+  action: "{{ ansible_pkg_mgr }} name=git state=latest update_cache=yes"
+  when: service|failed
 
- - name: Install expect
-   yum: pkg=expect state=latest
-   when: ansible_os_family == "RedHat"
+- name: Download Stash installer into /tmp
+  get_url: url="http://www.atlassian.com/software/stash/downloads/binary/atlassian-stash-3.5.0-x64.bin" dest=/tmp/stash.bin mode=0775
+  when: service|failed
 
- - name: Install expect
-   apt: pkg=expect state=latest
-   when: ansible_os_family == "Debian"
+- name: Copying the response file
+  template: src=installer_config_opts dest=/tmp/
+  when: service|failed
 
- - name: Download Stash installer into /tmp
-   get_url: url="http://www.atlassian.com/software/stash/downloads/binary/atlassian-stash-3.5.0-x64.bin" dest=/tmp/stash.bin mode=0775
+- name: Installing Atlassian Stash
+  shell: /tmp/stash.bin -q -varfile /tmp/installer_config_opts
+  when: service|failed
 
- - name: Copying the response file
-   template: src=installer_config_opts dest=/tmp/
-
- - name: Installing Atlassian Stash
-   shell: /tmp/stash.bin -q -varfile /tmp/installer_config_opts
+- name: Preparing Stash to be running behind NGINX
+  template: src=server.xml.j2 dest=/opt/atlassian/stash/3.5.0/conf/server.xml mode=0644
+  notify: restart stash
+  register: proxying
+  when: service|failed
