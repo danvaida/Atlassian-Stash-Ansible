@@ -63,6 +63,8 @@ group_vars/all
 ```
 smtp_password:
 smtp_username:
+ses_relayer_endpoint:
+ses_2ndrelayer_endpoint:
 ```
 
 And of course, edit the values in host_vars/localhost to match your own.
@@ -81,12 +83,14 @@ ansible-playbook stash.yml --ask-vault-pass
 
 #Steps after the playbooks completes successfully / while playbook is running
 
-1. Once you set up AWS SES manually in your AWS account, don't forget to configure the e-mail settings in Stash. Only thing you need to do is to set the "Hostname" to "localhost" (without quotes). "E-mail from" can be something relevant (mind the subdomain). Please leave ALL other fields blank. Finally, you can test your settings.
+Once you set up AWS SES manually in your AWS account, don't forget to configure the e-mail settings in Stash. 
+
+Only thing you need to do is to set the "Hostname" to "localhost" (without quotes). 
+
+"E-mail from" can be something relevant (mind the subdomain). Please leave ALL other fields blank. Finally, you can test your settings.
 
 
 #To Dos
-Make the Postfix role work on Debian-based distros.
-
-Provide some helpful links in this Readme.
+Make the Postfix role cross-platform.
 
 Better naming of variables and cleanup of plays.
